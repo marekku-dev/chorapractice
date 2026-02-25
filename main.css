@@ -1,0 +1,55 @@
+@font-face {
+  font-family: "PP Nikkei Line";
+  src:
+    local("PP Nikkei Line"),
+    url("../fonts/PPNikkeiLine-Regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+	font-size: 16px;
+	line-height: 20px;
+}
+
+body {
+	font-family: 'PP Nikkei Line';
+	background-color: #EDEDED;
+}
+
+a {
+	color: #000;
+}
+
+address {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+
+	font-style: normal;
+}
+
+
+h1, h2, h3 {
+	font-weight: 400;
+}
+
+h1 {
+	font-size: 6vw;
+	text-transform: uppercase;
+}
+
+.wrapper {
+	width: 100vw;
+	height: 100dvh;
+	padding: 10px 0 20px 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+}
