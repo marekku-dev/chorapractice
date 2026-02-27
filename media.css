@@ -2,6 +2,12 @@
 
 h1 {
 	font-size: 12vw;
+	line-height: 12vw;
+}
+
+#gallery {
+	height: 75vh;
+	max-width: 95vw;
 }
 
 }
