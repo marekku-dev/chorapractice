@@ -21,8 +21,13 @@
 		rFormula: document.getElementById('rFormula')
 	};
 
+	// Разбор числа с поддержкой запятой (мобильная клавиатура предлагает её).
+	function pf(v) {
+		return parseFloat(String(v == null ? '' : v).replace(',', '.'));
+	}
+
 	function num(el) {
-		var v = parseFloat(el.value);
+		var v = pf(el.value);
 		return isNaN(v) ? 0 : v;
 	}
 
@@ -202,9 +207,9 @@
 
 	function syncPresets() {
 		presetMap.forEach(function (m) {
-			var val = parseFloat(m[1].value);
+			var val = pf(m[1].value);
 			Array.prototype.forEach.call(document.getElementById(m[0]).querySelectorAll('button'), function (b) {
-				var bv = parseFloat(b.getAttribute('data-val'));
+				var bv = pf(b.getAttribute('data-val'));
 				b.classList.toggle('active', Math.abs(bv - val) < 1e-9);
 			});
 		});
@@ -221,15 +226,15 @@
 			var row = document.createElement('div');
 			row.className = 'roll-row';
 			row.innerHTML =
-				'<div class="input-wrap"><input type="number" class="roll-len" min="0" step="0.1" inputmode="decimal"><span class="input-unit">м</span></div>' +
+				'<div class="input-wrap"><input type="text" class="roll-len" inputmode="decimal"><span class="input-unit">м</span></div>' +
 				'<span class="roll-x">×</span>' +
-				'<div class="input-wrap"><input type="number" class="roll-qty" min="0" step="1" inputmode="numeric"><span class="input-unit">шт</span></div>' +
+				'<div class="input-wrap"><input type="text" class="roll-qty" inputmode="numeric"><span class="input-unit">шт</span></div>' +
 				'<button type="button" class="roll-del" title="удалить">×</button>';
 			var lenI = row.querySelector('.roll-len');
 			var qtyI = row.querySelector('.roll-qty');
 			lenI.value = r.len;
 			qtyI.value = r.qty;
-			lenI.addEventListener('input', function () { rolls[i].len = parseFloat(lenI.value) || 0; calc(); });
+			lenI.addEventListener('input', function () { rolls[i].len = pf(lenI.value) || 0; calc(); });
 			qtyI.addEventListener('input', function () { rolls[i].qty = Math.max(0, parseInt(qtyI.value, 10) || 0); calc(); });
 			row.querySelector('.roll-del').addEventListener('click', function () {
 				rolls.splice(i, 1);
@@ -366,7 +371,7 @@
 		if ('sw' in o) els.stripWidth.value = o.sw == null ? '' : o.sw;
 		if ('p' in o) els.price.value = o.p == null ? '' : o.p;
 		if (Array.isArray(o.r) && o.r.length) {
-			rolls = o.r.map(function (a) { return { len: parseFloat(a[0]) || 0, qty: Math.max(0, parseInt(a[1], 10) || 0) }; });
+			rolls = o.r.map(function (a) { return { len: pf(a[0]) || 0, qty: Math.max(0, parseInt(a[1], 10) || 0) }; });
 		}
 		renderRolls();
 		syncToggles();
