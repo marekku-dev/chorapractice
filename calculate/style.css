@@ -483,9 +483,7 @@ input[type=number] {
 	.result-grid .rescol {
 		gap: 8px;
 	}
-	.result-grid .reslabel {
-		min-height: 36px;
-	}
+
 	.result-grid .resval {
 		font-size: 26px;
 		line-height: 28px;
