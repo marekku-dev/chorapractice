@@ -291,7 +291,6 @@ input[type=number] {
 	display: flex;
 	align-items: flex-end;
 	gap: 14px;
-	overflow-x: auto;
 }
 
 .rescol {
@@ -458,6 +457,43 @@ input[type=number] {
 
 .hidden {
 	display: none !important;
+}
+
+/* На узких экранах крестик удаления рулона возвращаем в поток, чтобы не вылезал за край. */
+@media (max-width: 700px) {
+	.roll-del {
+		position: static;
+		margin-left: 0;
+		flex: none;
+		width: 34px;
+	}
+}
+
+/* Финальные расчёты: вместо горизонтального ряда — сетка 2×2, без знаков между. */
+@media (max-width: 620px) {
+	.result-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		align-items: start;
+		gap: 20px 14px;
+	}
+	.result-grid .resop {
+		display: none;
+	}
+	.result-grid .rescol {
+		gap: 8px;
+	}
+	.result-grid .reslabel {
+		min-height: 36px;
+	}
+	.result-grid .resval {
+		font-size: 26px;
+		line-height: 28px;
+	}
+	.result-grid .rescol.cost .resval {
+		font-size: 28px;
+		line-height: 30px;
+	}
 }
 
 @media (max-width: 480px) {
