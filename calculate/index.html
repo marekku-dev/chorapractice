@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="../main.css">
+	<link rel="stylesheet" href="../media.css">
+	<link rel="stylesheet" href="style.css">
+	<title>CHORA PRACTICE – Калькулятор ткани</title>
+	<link rel="icon" type="image/png" href="../favicon.png">
+</head>
+
+<body>
+
+<div class="calc">
+	<h1>калькулятор ткани</h1>
+
+	<div class="row-group">
+		<div class="field">
+			<label>Тип объекта</label>
+			<div class="type-toggle" id="typeToggle">
+				<button type="button" data-type="table" class="active">Стол</button>
+				<button type="button" data-type="backdrop">Бэкдроп</button>
+			</div>
+		</div>
+
+		<div class="field">
+			<label>Драпировка</label>
+			<div class="type-toggle" id="drapeToggle">
+				<button type="button" data-drape="1" class="active">Есть</button>
+				<button type="button" data-drape="0">Нет</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="row-group">
+		<div class="field">
+			<label for="width">Ширина <span class="hint" data-tip="Что назвать шириной, а что длиной — не важно: большая сторона идёт на число полосок, меньшая — на длину полоски.">?</span></label>
+			<div class="input-wrap">
+				<input type="number" id="width" min="0" step="0.01" inputmode="decimal">
+				<span class="input-unit">м</span>
+			</div>
+		</div>
+
+		<div class="field" id="lengthField">
+			<label for="length">Длина <span class="hint" data-tip="Что назвать шириной, а что длиной — не важно: большая сторона идёт на число полосок, меньшая — на длину полоски.">?</span></label>
+			<div class="input-wrap">
+				<input type="number" id="length" min="0" step="0.01" inputmode="decimal">
+				<span class="input-unit">м</span>
+			</div>
+		</div>
+
+		<div class="field">
+			<label for="height">Высота <span class="hint" data-tip="У стола прибавляется к длине полоски дважды — ткань свисает с обоих торцов.">?</span></label>
+			<div class="input-wrap">
+				<input type="number" id="height" min="0" step="0.01" inputmode="decimal">
+				<span class="input-unit">м</span>
+			</div>
+		</div>
+
+		<div class="field">
+			<label for="spusk">Спуск <span class="hint" data-tip="Запас ткани сверх высоты — на пол, подгиб или «лужу». У стола добавляется 2 раза, у бэкдропа — 1 раз.">?</span></label>
+			<div class="input-wrap">
+				<input type="number" id="spusk" min="0" step="0.01" inputmode="decimal">
+				<span class="input-unit">м</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="row-group">
+		<div class="field">
+			<label for="stripWidth">Ширина полоски <span class="hint" data-tip="На неё делится габарит, чтобы получить число полос: чем шире полоска, тем меньше полос.">?</span></label>
+			<div class="input-wrap">
+				<input type="number" id="stripWidth" min="0.01" step="0.01" value="1.4" inputmode="decimal">
+				<span class="input-unit">м</span>
+			</div>
+			<div class="presets" id="stripPresets">
+				<button type="button" data-val="1.4">1.4 м</button>
+				<button type="button" data-val="2.8">2.8 м</button>
+				<button type="button" data-val="3.0">3.0 м</button>
+			</div>
+		</div>
+
+		<div class="field">
+			<label for="price">Стоимость</label>
+			<div class="input-wrap wide">
+				<input type="number" id="price" min="0" step="0.01" value="2.6" inputmode="decimal">
+				<span class="input-unit">€/м</span>
+			</div>
+			<div class="presets" id="pricePresets">
+				<button type="button" data-val="2.6">2.6 €</button>
+				<button type="button" data-val="8">8 €</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="field">
+		<label>Рулоны ткани — длина и количество <span class="hint" data-tip="Полоски раскладываются по рулонам так, чтобы задействовать меньше рулонов и оставить минимум обрезков и один длинный полезный остаток.">?</span></label>
+		<div id="rollRows"></div>
+		<button type="button" id="addRoll" class="add-roll">+ вариант рулона</button>
+	</div>
+
+	<div class="diagram" id="diagram"></div>
+
+	<div class="result" id="result">
+		<div class="result-grid">
+			<div class="rescol">
+				<span class="reslabel">Полосок</span>
+				<span class="resval" id="rStrips">—</span>
+			</div>
+			<span class="resop">×</span>
+			<div class="rescol">
+				<span class="reslabel">Длина полоски</span>
+				<span class="resval" id="rStripLen">—</span>
+			</div>
+			<span class="resop">=</span>
+			<div class="rescol">
+				<span class="reslabel">Всего</span>
+				<span class="resval" id="rTotalMeters">—</span>
+			</div>
+			<span class="resop">=</span>
+			<div class="rescol cost">
+				<span class="reslabel">Стоимость</span>
+				<span class="resval" id="rCost">—</span>
+			</div>
+		</div>
+		<div class="muted hidden" id="rFormula"></div>
+		<div id="rollPlan"></div>
+	</div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
