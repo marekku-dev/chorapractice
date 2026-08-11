@@ -15,26 +15,57 @@
 <div class="calc">
 	<h1>калькулятор ткани</h1>
 
-	<div class="row-group">
-		<div class="field">
-			<label>Тип объекта</label>
-			<div class="type-toggle" id="typeToggle">
-				<button type="button" data-type="table" class="active">Стол</button>
-				<button type="button" data-type="backdrop">Бэкдроп</button>
-			</div>
-		</div>
-
-		<div class="field">
-			<label>Драпировка</label>
-			<div class="type-toggle" id="drapeToggle">
-				<button type="button" data-drape="1" class="active">Есть</button>
-				<button type="button" data-drape="0">Нет</button>
-			</div>
+	<div class="field">
+		<label>Тип объекта</label>
+		<div class="type-toggle" id="typeToggle">
+			<button type="button" data-type="table" class="active">Стол</button>
+			<button type="button" data-type="round">Круглый</button>
+			<button type="button" data-type="backdrop">Бэкдроп</button>
+			<button type="button" data-type="walls">Стены</button>
+			<button type="button" data-type="roof">Крыша</button>
 		</div>
 	</div>
 
+	<div class="field hidden" id="roofLayoutField">
+		<label>Полосы крыши</label>
+		<div class="type-toggle" id="roofLayoutToggle">
+			<button type="button" data-roof="parallel" class="active">Параллельно</button>
+			<button type="button" data-roof="center">Из центра</button>
+		</div>
+	</div>
+
+	<div class="field hidden" id="perSideField">
+		<label for="perSide">Полосок на сторону <span class="hint" data-tip="Для крыши из центра ширина полоски не важна — задаём число полос на одну сторону. Итого × 4 стороны. В режиме «петлёй» одна полоса идёт до края и обратно к центру, поэтому полос вдвое меньше, но каждая вдвое длиннее.">?</span></label>
+		<div class="input-wrap">
+			<input type="text" id="perSide" inputmode="numeric" value="4">
+			<span class="input-unit">шт</span>
+		</div>
+	</div>
+
+	<div class="field drape-field hidden" id="loopField">
+		<label>Полоса петлёй</label>
+		<button type="button" id="loopToggle" class="switch" role="switch" aria-checked="false">
+			<span class="switch-knob"></span>
+		</button>
+	</div>
+
+	<div class="field drape-field" id="drapeField">
+		<label>Драпировка</label>
+		<button type="button" id="drapeToggle" class="switch active" role="switch" aria-checked="true">
+			<span class="switch-knob"></span>
+		</button>
+	</div>
+
 	<div class="row-group">
-		<div class="field">
+		<div class="field hidden" id="diameterField">
+			<label for="diameter">Диаметр <span class="hint" data-tip="Диаметр стола. Кладём два полотна накрест; каждое = диаметр + 2 высоты + 2 спуска (свес и запас с обеих сторон). При драпировке полотен вдвое больше.">?</span></label>
+			<div class="input-wrap">
+				<input type="text" id="diameter" inputmode="decimal">
+				<span class="input-unit">м</span>
+			</div>
+		</div>
+
+		<div class="field" id="widthField">
 			<label for="width">Ширина <span class="hint" data-tip="Что назвать шириной, а что длиной — не важно: большая сторона идёт на число полосок, меньшая — на длину полоски.">?</span></label>
 			<div class="input-wrap">
 				<input type="text" id="width" min="0" step="0.01" inputmode="decimal">
@@ -50,15 +81,15 @@
 			</div>
 		</div>
 
-		<div class="field">
-			<label for="height">Высота <span class="hint" data-tip="У стола прибавляется к длине полоски дважды — ткань свисает с обоих торцов.">?</span></label>
+		<div class="field" id="heightField">
+			<label for="height">Высота <span class="hint" data-tip="Высота конструкции. У стола — свес по бокам (×2), у крыши — подъём центра (появляются скаты под углом, длина ткани растёт), у стен и бэкдропа — высота полотна.">?</span></label>
 			<div class="input-wrap">
 				<input type="text" id="height" min="0" step="0.01" inputmode="decimal">
 				<span class="input-unit">м</span>
 			</div>
 		</div>
 
-		<div class="field">
+		<div class="field" id="spuskField">
 			<label for="spusk">Спуск <span class="hint" data-tip="Запас ткани сверх высоты — на пол, подгиб или «лужу». У стола добавляется 2 раза, у бэкдропа — 1 раз.">?</span></label>
 			<div class="input-wrap">
 				<input type="text" id="spusk" min="0" step="0.01" inputmode="decimal">
@@ -68,7 +99,7 @@
 	</div>
 
 	<div class="row-group">
-		<div class="field">
+		<div class="field" id="stripWidthField">
 			<label for="stripWidth">Ширина полоски <span class="hint" data-tip="На неё делится габарит, чтобы получить число полос: чем шире полоска, тем меньше полос.">?</span></label>
 			<div class="input-wrap">
 				<input type="text" id="stripWidth" min="0.01" step="0.01" value="1.4" inputmode="decimal">

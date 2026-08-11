@@ -1,15 +1,26 @@
 (function () {
-	var state = { type: 'table', drape: true };
+	var state = { type: 'table', drape: true, roofLayout: 'parallel', loop: false };
 	var rolls = [{ len: 25, qty: 1 }];
 
 	var els = {
 		width: document.getElementById('width'),
 		length: document.getElementById('length'),
 		height: document.getElementById('height'),
+		diameter: document.getElementById('diameter'),
+		perSide: document.getElementById('perSide'),
 		stripWidth: document.getElementById('stripWidth'),
 		spusk: document.getElementById('spusk'),
 		price: document.getElementById('price'),
+		diameterField: document.getElementById('diameterField'),
+		widthField: document.getElementById('widthField'),
 		lengthField: document.getElementById('lengthField'),
+		heightField: document.getElementById('heightField'),
+		spuskField: document.getElementById('spuskField'),
+		drapeField: document.getElementById('drapeField'),
+		roofLayoutField: document.getElementById('roofLayoutField'),
+		perSideField: document.getElementById('perSideField'),
+		loopField: document.getElementById('loopField'),
+		stripWidthField: document.getElementById('stripWidthField'),
 		diagram: document.getElementById('diagram'),
 		rollRows: document.getElementById('rollRows'),
 		addRoll: document.getElementById('addRoll'),
@@ -67,6 +78,47 @@
 			formula = 'Полоски по длинной стороне (' + fmtNum(longS) + ' м): ceil(' +
 				fmtNum(longS) + ' × ' + fmtNum(mult) + ' / ' + fmtNum(stripWidth) + ') = ' + strips +
 				'. Длина полоски по короткой (' + fmtNum(shortS) + ' м): ' + fmtNum(shortS) + ' + 2×' + fmtNum(height) + ' + 2×' + fmtNum(spusk) + ' = ' + fmtNum(stripLen) + ' м.';
+		} else if (state.type === 'round') {
+			// Круглый стол: два полотна накрест (при драпировке — вдвое больше).
+			// Каждое полотно = диаметр + 2 высоты + 2 спуска (свес и запас с обеих сторон).
+			var dia = num(els.diameter);
+			strips = 2 * mult;
+			stripLen = dia + 2 * height + 2 * spusk;
+			formula = 'Круглый стол: ' + strips + ' полотна накрест (2' + (mult > 1 ? ' × драпировка ' + fmtNum(mult) : '') +
+				'). Полотно = диаметр ' + fmtNum(dia) + ' + 2×высота ' + fmtNum(height) + ' + 2×спуск ' + fmtNum(spusk) + ' = ' + fmtNum(stripLen) + ' м.';
+		} else if (state.type === 'walls') {
+			// Стены комнаты/беседки: ткань по всему периметру, как длинный бэкдроп.
+			var perim = 2 * (width + length);
+			strips = Math.ceil(perim * mult / stripWidth);
+			stripLen = height + spusk;
+			formula = 'Стены (периметр ' + fmtNum(perim) + ' м): ceil(' + fmtNum(perim) + ' × ' + fmtNum(mult) +
+				' / ' + fmtNum(stripWidth) + ') = ' + strips + '. Длина полоски = высота ' + fmtNum(height) + ' + спуск ' + fmtNum(spusk) + ' = ' + fmtNum(stripLen) + ' м.';
+		} else if (state.type === 'roof') {
+			// Крыша: как стол без высоты стен, но со спуском; центр может быть поднят (скаты под углом).
+			if (state.roofLayout === 'center') {
+				// Полосы из центра. Длина ската = √(полудиагональ² + высота подъёма²).
+				var halfDiag = Math.sqrt((width / 2) * (width / 2) + (length / 2) * (length / 2));
+				var slant = Math.sqrt(halfDiag * halfDiag + height * height);
+				var perSide = Math.max(1, Math.round(num(els.perSide)) || 1);
+				if (state.loop) {
+					// Одна полоса идёт до края и обратно к центру: полос вдвое меньше, вдвое длиннее.
+					strips = perSide * 2;
+					stripLen = 2 * (slant + spusk);
+					formula = 'Крыша из центра, петлёй: ' + perSide + ' × 2 = ' + strips + ' полос. Полоса (туда-обратно) = 2 × (скат ' + fmtNum(slant) + ' + спуск ' + fmtNum(spusk) + ') = ' + fmtNum(stripLen) + ' м.';
+				} else {
+					strips = perSide * 4;
+					stripLen = slant + spusk;
+					formula = 'Крыша из центра: ' + perSide + ' на сторону × 4 = ' + strips + ' полос. Полоса = скат ' + fmtNum(slant) + ' (√(полудиаг ' + fmtNum(halfDiag) + '² + высота ' + fmtNum(height) + '²)) + спуск ' + fmtNum(spusk) + ' = ' + fmtNum(stripLen) + ' м.';
+				}
+			} else {
+				var longR = Math.max(width, length), shortR = Math.min(width, length);
+				strips = Math.ceil(longR * mult / stripWidth);
+				// Двускатка: полоса идёт через конёк — два ската по половине короткой стороны.
+				var slope = 2 * Math.sqrt((shortR / 2) * (shortR / 2) + height * height);
+				stripLen = slope + 2 * spusk;
+				formula = 'Крыша параллельно (' + fmtNum(longR) + ' м): ceil(' + fmtNum(longR) + ' × ' + fmtNum(mult) +
+					' / ' + fmtNum(stripWidth) + ') = ' + strips + '. Полоса = 2×√((' + fmtNum(shortR) + '/2)² + высота ' + fmtNum(height) + '²) + 2×спуск ' + fmtNum(spusk) + ' = ' + fmtNum(stripLen) + ' м.';
+			}
 		} else {
 			// Бэкдроп: драпировка по ширине, полоска = высота + 1 спуск.
 			strips = Math.ceil(width * mult / stripWidth);
@@ -86,7 +138,7 @@
 		els.rFormula.textContent = formula;
 
 		syncPresets();
-		drawDiagram(width, length, height, spusk, strips);
+		drawDiagram(state.type === 'round' ? num(els.diameter) : width, length, height, spusk, strips, stripWidth);
 		renderPlan(distribute(strips, stripLen));
 	}
 
@@ -94,10 +146,38 @@
 	var A = Math.PI / 6, COS = Math.cos(A), SIN = Math.sin(A);
 	function proj(p) { return { x: (p[0] - p[1]) * COS, y: (p[0] + p[1]) * SIN - p[2] }; }
 
-	function drawDiagram(W, L, H, spusk, strips) {
+	function drawDiagram(W, L, H, spusk, strips, stripW) {
 		var faces = [], labels = [], drapes = [], seams = [];
 
-		if (state.type === 'table') {
+		if (state.type === 'round') {
+			// W здесь = диаметр. Настоящий цилиндр: основание + изогнутая боковая стенка +
+			// столешница, поверх — два полотна накрест (визуально уже́ диаметра, чтобы круг читался).
+			if (W <= 0 || H <= 0) { els.diagram.innerHTML = ''; return; }
+			var R = W / 2, N = 40;
+			function circ(z) {
+				var pp = [];
+				for (var k = 0; k <= N; k++) { var a = 2 * Math.PI * k / N; pp.push([R + R * Math.cos(a), R + R * Math.sin(a), z]); }
+				return pp;
+			}
+			var top = circ(H), bot = circ(0);
+			faces.push({ pts: bot, fill: 'rgba(0,0,0,0.05)' }); // основание
+			// боковая стенка — только передние сегменты (изгиб цилиндра)
+			for (var k = 0; k < N; k++) {
+				var am = 2 * Math.PI * (k + 0.5) / N;
+				if (Math.cos(am) + Math.sin(am) > 0) {
+					faces.push({ pts: [top[k], top[k + 1], bot[k + 1], bot[k]], fill: 'rgba(0,0,0,0.13)' });
+				}
+			}
+			faces.push({ pts: top, fill: 'rgba(0,0,0,0.09)' }); // столешница
+			labels.push({ a: [0,R,H], b: [W,R,H], text: fmtNum(W) + ' м' }); // диаметр
+			labels.push({ a: [W,R,H], b: [W,R,0], text: fmtNum(H) + ' м' }); // высота
+			// Спуск — полоска ткани на полу перед столом, в плоскости пола (по изо-осям),
+			// шириной в диаметр; задняя кромка примыкает к переднему краю основания.
+			if (spusk > 0) {
+				faces.push({ pts: [[0,W,0],[W,W,0],[W,W + spusk,0],[0,W + spusk,0]], fill: 'rgba(0,0,0,0.11)' });
+				labels.push({ a: [0,W + spusk,0], b: [0,W,0], text: fmtNum(spusk) + ' м' });
+			}
+		} else if (state.type === 'table') {
 			if (W <= 0 || L <= 0 || H <= 0) { els.diagram.innerHTML = ''; return; }
 			// Полоски и спуск идут вдоль длинной стороны — кладём её по оси X.
 			var lo = Math.max(W, L), sh = Math.min(W, L);
@@ -118,6 +198,67 @@
 				var seg = [[sx,0,H],[sx,L,H],[sx,L,0]];
 				if (spusk > 0) seg.push([sx,L,-spusk]);
 				seams.push(seg);
+			}
+		} else if (state.type === 'walls') {
+			// Комната/беседка: пол + все 4 стены (задние выглядывают сверху за передними).
+			if (W <= 0 || L <= 0 || H <= 0) { els.diagram.innerHTML = ''; return; }
+			faces.push({ pts: [[0,0,0],[0,L,0],[0,L,H],[0,0,H]], fill: 'rgba(0,0,0,0.07)' }); // задняя левая (x=0)
+			faces.push({ pts: [[0,0,0],[W,0,0],[W,0,H],[0,0,H]], fill: 'rgba(0,0,0,0.05)' }); // задняя правая (y=0)
+			faces.push({ pts: [[0,0,0],[W,0,0],[W,L,0],[0,L,0]], fill: 'rgba(0,0,0,0.04)' }); // пол
+			faces.push({ pts: [[W,0,0],[W,L,0],[W,L,H],[W,0,H]], fill: 'rgba(0,0,0,0.10)' }); // правая (перед)
+			faces.push({ pts: [[0,L,0],[W,L,0],[W,L,H],[0,L,H]], fill: 'rgba(0,0,0,0.14)' }); // передняя
+			if (spusk > 0) drapes.push([[0,L,0],[W,L,0],[W,L,-spusk],[0,L,-spusk]]);          // спуск у пола
+			var wstep = stripW > 0 ? stripW : W;
+			for (var wx = wstep; wx < W - 1e-6; wx += wstep) seams.push([[wx,L,0],[wx,L,H]]); // швы передней
+			for (var wy = wstep; wy < L - 1e-6; wy += wstep) seams.push([[W,wy,0],[W,wy,H]]); // швы правой
+			labels.push({ a: [0,L,0], b: [W,L,0], text: fmtNum(W) + ' м' });
+			labels.push({ a: [W,L,0], b: [W,0,0], text: fmtNum(L) + ' м' });
+			labels.push({ a: [W,0,H], b: [W,0,0], text: fmtNum(H) + ' м' });
+			if (spusk > 0) labels.push({ a: [0,L,0], b: [0,L,-spusk], text: fmtNum(spusk) + ' м' });
+		} else if (state.type === 'roof') {
+			// Крыша: центр поднят на H (H=0 → плоская). Параллельно — двускатка, из центра — пирамида.
+			if (W <= 0 || L <= 0) { els.diagram.innerHTML = ''; return; }
+			var RW = Math.max(W, L), RL = Math.min(W, L); // длинная сторона по X
+			if (state.roofLayout === 'center') {
+				var pk = [RW / 2, RL / 2, H]; // вершина
+				faces.push({ pts: [pk, [0,0,0], [RW,0,0]], fill: 'rgba(0,0,0,0.07)' });   // скат к заду (y=0)
+				faces.push({ pts: [pk, [0,0,0], [0,RL,0]], fill: 'rgba(0,0,0,0.10)' });   // скат влево (x=0)
+				faces.push({ pts: [pk, [RW,0,0], [RW,RL,0]], fill: 'rgba(0,0,0,0.12)' }); // скат вправо (x=RW)
+				faces.push({ pts: [pk, [0,RL,0], [RW,RL,0]], fill: 'rgba(0,0,0,0.15)' }); // скат вперёд (y=RL)
+				if (spusk > 0) {
+					drapes.push([[0,RL,0],[RW,RL,0],[RW,RL,-spusk],[0,RL,-spusk]]);
+					drapes.push([[RW,0,0],[RW,RL,0],[RW,RL,-spusk],[RW,0,-spusk]]);
+				}
+				var perSideD = Math.max(1, Math.round(num(els.perSide)) || 1);
+				var redges = [ [[0,0,0],[RW,0,0]], [[RW,0,0],[RW,RL,0]], [[RW,RL,0],[0,RL,0]], [[0,RL,0],[0,0,0]] ];
+				redges.forEach(function (e) {
+					for (var i = 0; i < perSideD; i++) {
+						var t2 = (i + 0.5) / perSideD;
+						seams.push([pk, [e[0][0] + (e[1][0] - e[0][0]) * t2, e[0][1] + (e[1][1] - e[0][1]) * t2, 0]]);
+					}
+				});
+				labels.push({ a: [0,RL,0], b: [RW,RL,0], text: fmtNum(RW) + ' м' });
+				labels.push({ a: [RW,RL,0], b: [RW,0,0], text: fmtNum(RL) + ' м' });
+				if (H > 0) labels.push({ a: [RW / 2, RL / 2, H], b: [RW / 2, RL / 2, 0], text: fmtNum(H) + ' м' });
+				if (spusk > 0) labels.push({ a: [0,RL,0], b: [0,RL,-spusk], text: fmtNum(spusk) + ' м' });
+			} else {
+				var ry = RL / 2; // конёк по центру короткой стороны (вдоль X)
+				faces.push({ pts: [[0,0,0],[RW,0,0],[RW,ry,H],[0,ry,H]], fill: 'rgba(0,0,0,0.09)' });   // задний скат
+				faces.push({ pts: [[0,ry,H],[RW,ry,H],[RW,RL,0],[0,RL,0]], fill: 'rgba(0,0,0,0.14)' }); // передний скат
+				if (spusk > 0) {
+					drapes.push([[0,RL,0],[RW,RL,0],[RW,RL,-spusk],[0,RL,-spusk]]);
+					drapes.push([[0,0,0],[RW,0,0],[RW,0,-spusk],[0,0,-spusk]]);
+				}
+				var rstep = stripW > 0 ? stripW : RW;
+				for (var rx = rstep; rx < RW - 1e-6; rx += rstep) {
+					var pseg = [[rx,0,0],[rx,ry,H],[rx,RL,0]];
+					if (spusk > 0) { pseg.unshift([rx,0,-spusk]); pseg.push([rx,RL,-spusk]); }
+					seams.push(pseg);
+				}
+				labels.push({ a: [0,RL,0], b: [RW,RL,0], text: fmtNum(RW) + ' м' });
+				labels.push({ a: [RW,RL,0], b: [RW,0,0], text: fmtNum(RL) + ' м' });
+				if (H > 0) labels.push({ a: [0,ry,H], b: [0,ry,0], text: fmtNum(H) + ' м' });
+				if (spusk > 0) labels.push({ a: [0,RL,0], b: [0,RL,-spusk], text: fmtNum(spusk) + ' м' });
 			}
 		} else {
 			if (W <= 0 || H <= 0) { els.diagram.innerHTML = ''; return; }
@@ -350,9 +491,13 @@
 		return {
 			t: state.type,
 			d: state.drape ? 1 : 0,
+			rl: state.roofLayout,
+			lp: state.loop ? 1 : 0,
+			ps: els.perSide.value,
 			w: els.width.value,
 			l: els.length.value,
 			h: els.height.value,
+			dm: els.diameter.value,
 			s: els.spusk.value,
 			sw: els.stripWidth.value,
 			p: els.price.value,
@@ -362,11 +507,15 @@
 
 	function applyState(o) {
 		if (!o) return;
-		if (o.t === 'table' || o.t === 'backdrop') state.type = o.t;
+		if (['table', 'backdrop', 'round', 'walls', 'roof'].indexOf(o.t) >= 0) state.type = o.t;
 		state.drape = !(o.d === 0 || o.d === '0');
+		if (o.rl === 'parallel' || o.rl === 'center') state.roofLayout = o.rl;
+		state.loop = (o.lp === 1 || o.lp === '1');
+		if ('ps' in o) els.perSide.value = o.ps == null ? '' : o.ps;
 		if ('w' in o) els.width.value = o.w == null ? '' : o.w;
 		if ('l' in o) els.length.value = o.l == null ? '' : o.l;
 		if ('h' in o) els.height.value = o.h == null ? '' : o.h;
+		if ('dm' in o) els.diameter.value = o.dm == null ? '' : o.dm;
 		if ('s' in o) els.spusk.value = o.s == null ? '' : o.s;
 		if ('sw' in o) els.stripWidth.value = o.sw == null ? '' : o.sw;
 		if ('p' in o) els.price.value = o.p == null ? '' : o.p;
@@ -381,10 +530,33 @@
 		Array.prototype.forEach.call(document.querySelectorAll('#typeToggle button'), function (b) {
 			b.classList.toggle('active', b.getAttribute('data-type') === state.type);
 		});
-		els.lengthField.classList.toggle('hidden', state.type === 'backdrop');
-		Array.prototype.forEach.call(document.querySelectorAll('#drapeToggle button'), function (b) {
-			b.classList.toggle('active', (b.getAttribute('data-drape') === '1') === state.drape);
+		var dt = document.getElementById('drapeToggle');
+		dt.classList.toggle('active', state.drape);
+		dt.setAttribute('aria-checked', state.drape ? 'true' : 'false');
+		Array.prototype.forEach.call(document.querySelectorAll('#roofLayoutToggle button'), function (b) {
+			b.classList.toggle('active', b.getAttribute('data-roof') === state.roofLayout);
 		});
+		var lt = document.getElementById('loopToggle');
+		lt.classList.toggle('active', state.loop);
+		lt.setAttribute('aria-checked', state.loop ? 'true' : 'false');
+		applyTypeVisibility();
+	}
+
+	// Показ полей под тип объекта.
+	function applyTypeVisibility() {
+		var t = state.type;
+		var roofCenter = (t === 'roof' && state.roofLayout === 'center');
+		els.diameterField.classList.toggle('hidden', t !== 'round');           // диаметр — только круглый
+		els.widthField.classList.toggle('hidden', t === 'round');              // ширина — у всех, кроме круглого
+		els.lengthField.classList.toggle('hidden', t === 'backdrop' || t === 'round'); // длина — стол/стены/крыша
+		els.heightField.classList.remove('hidden');                            // высота — у всех (у крыши = подъём центра)
+		els.spuskField.classList.remove('hidden');
+		els.roofLayoutField.classList.toggle('hidden', t !== 'roof');          // направление полос — только крыша
+		// У крыши «из центра»: вместо ширины полоски и драпировки — число полос на сторону и «петлёй».
+		els.stripWidthField.classList.toggle('hidden', roofCenter);
+		els.drapeField.classList.toggle('hidden', roofCenter);
+		els.perSideField.classList.toggle('hidden', !roofCenter);
+		els.loopField.classList.toggle('hidden', !roofCenter);
 	}
 
 	// ---- Хранилище (localStorage) ----
@@ -405,7 +577,7 @@
 		Array.prototype.forEach.call(this.querySelectorAll('button'), function (b) {
 			b.classList.toggle('active', b === btn);
 		});
-		els.lengthField.classList.toggle('hidden', state.type === 'backdrop');
+		applyTypeVisibility();
 		calc();
 	});
 
@@ -430,19 +602,36 @@
 		calc();
 	});
 
-	// Драпировка (переключатель): есть → множитель 2, нет → 1.
-	document.getElementById('drapeToggle').addEventListener('click', function (e) {
+	// Направление полос крыши.
+	document.getElementById('roofLayoutToggle').addEventListener('click', function (e) {
 		var btn = e.target.closest('button');
 		if (!btn) return;
-		state.drape = btn.getAttribute('data-drape') === '1';
+		state.roofLayout = btn.getAttribute('data-roof');
 		Array.prototype.forEach.call(this.querySelectorAll('button'), function (b) {
 			b.classList.toggle('active', b === btn);
 		});
+		applyTypeVisibility();
+		calc();
+	});
+
+	// Полоса петлёй (тумблер) — только для крыши из центра.
+	document.getElementById('loopToggle').addEventListener('click', function () {
+		state.loop = !state.loop;
+		this.classList.toggle('active', state.loop);
+		this.setAttribute('aria-checked', state.loop ? 'true' : 'false');
+		calc();
+	});
+
+	// Драпировка (тумблер): вкл → множитель 2, выкл → 1.
+	document.getElementById('drapeToggle').addEventListener('click', function () {
+		state.drape = !state.drape;
+		this.classList.toggle('active', state.drape);
+		this.setAttribute('aria-checked', state.drape ? 'true' : 'false');
 		calc();
 	});
 
 	// Пересчёт при любом вводе
-	['width', 'length', 'height', 'stripWidth', 'spusk', 'price'].forEach(function (k) {
+	['width', 'length', 'height', 'diameter', 'perSide', 'stripWidth', 'spusk', 'price'].forEach(function (k) {
 		els[k].addEventListener('input', calc);
 	});
 
