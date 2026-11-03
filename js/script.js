@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const gallery = document.getElementById('gallery');
-  const images = gallery.querySelectorAll('img');
-  const count = images.length;
+  const slides = document.querySelectorAll('#gallery > picture');
+  if (slides.length < 2) return;
 
-  images.forEach((img, i) => img.style.display = i === 0 ? 'block' : 'none');
+  const INTERVAL = 5000; // ms between slides
+  let current = 0;
 
-  document.addEventListener('mousemove', (e) => {
-    const index = Math.floor(e.clientX / window.innerWidth * count);
-    images.forEach((img, i) => img.style.display = i === index ? 'block' : 'none');
-  });
+  setInterval(() => {
+    slides[current].classList.remove('active');
+    current = (current + 1) % slides.length;
+    slides[current].classList.add('active');
+  }, INTERVAL);
 });
